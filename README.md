@@ -8,7 +8,7 @@
 You can use Swift Package Manager to integrate the library by adding the following dependency in your Package.swift file or by adding directly within Xcode:
 
 ```swift
-.Package(url: "https://github.com/xtro/SwiftUseCase.git", majorVersion: 1)
+.package(url: "https://github.com/xtro/SwiftUseCase.git", .upToNextMajor(from: "0.0.1"))
 ```
 
 ## Definitions
