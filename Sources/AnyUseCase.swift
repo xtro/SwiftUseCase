@@ -10,7 +10,7 @@ import Foundation
 /// - `Cancellation` executes on cancellation.
 /// - `Completion` executes after completion.
 /// - `Failure` executes when `Execution` fails.
-public protocol AnyUseCaseType: UseCaseable {
+public protocol AnyUseCaseType: Usecaseable {
     typealias Cancellation = () -> Bool
     typealias Completion = (Result) -> Void
     typealias Failure = (Error) -> Void

@@ -10,7 +10,7 @@ public extension AsyncUseCase {
         Future { promise in
             Task.detached(priority: priority) {
                 let result = await execute(parameters)
-                await MainActor.run {
+                await MainActor.run { [promise] in
                     promise(.success(result))
                 }
             }

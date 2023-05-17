@@ -17,8 +17,8 @@
 - ``AsyncThrowingExecutable``
 
 ### Use cases
-- ``SyncUseCase``
-- ``SyncThrowingUseCase``
+- ``UseCase``
+- ``ThrowingUseCase``
 - ``AsyncThrowingUseCase``
 - ``AsyncUseCase``
 

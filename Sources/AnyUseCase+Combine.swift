@@ -16,7 +16,7 @@ public extension Publisher {
             var cancellable: AnyCancellable?
             cancellable = self
                 .receive(on: receiveOn ?? DispatchQueue.main)
-                .sink(receiveCompletion: { complete in
+                .sink(receiveCompletion: { [usecase, cancellable] complete in
                     switch complete {
                     case .finished:
                         break
@@ -24,7 +24,7 @@ public extension Publisher {
                         usecase.onFailure?(error)
                     }
                     cancellable?.cancel()
-                }, receiveValue: { output in
+                }, receiveValue: { [usecase, cancellable] output in
                     usecase.onComplete?(output)
                     cancellable?.cancel()
                 })

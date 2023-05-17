@@ -7,6 +7,3 @@ import Foundation
 
 public typealias Executable<Parameter, Result> = (Parameter) -> Result
 public typealias ThrowingExecutable<Parameter, Result> = (Parameter) throws -> Result
-
-public typealias AsyncExecutable<Parameter: Sendable, Result: Sendable> = @Sendable (Parameter) async -> Result
-public typealias AsyncThrowingExecutable<Parameter: Sendable, Result: Sendable> = @Sendable (Parameter) async throws -> Result

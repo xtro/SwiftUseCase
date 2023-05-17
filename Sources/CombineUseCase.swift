@@ -12,9 +12,9 @@ public struct CombineUseCase<P: Publisher>: AsyncThrowingUseCase {
     public var execute: AsyncThrowingExecutable<Parameter, Result> = { publisher in
         let task = Cancellable()
         return try await withTaskCancellationHandler {
-            return try await withUnsafeThrowingContinuation { continuation in
+            return try await withUnsafeThrowingContinuation { [task] continuation in
                 task.value = publisher
-                    .sink(receiveCompletion: {
+                    .sink(receiveCompletion: { [task] in
                         switch $0 {
                         case .finished:
                             break
@@ -26,7 +26,7 @@ public struct CombineUseCase<P: Publisher>: AsyncThrowingUseCase {
                         continuation.resume(returning: $0)
                     })
             }
-        } onCancel: {
+        } onCancel: { [task] in
             task.value?.cancel()
         }
     }

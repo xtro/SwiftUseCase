@@ -11,11 +11,11 @@ public extension AsyncThrowingUseCase {
             Task.detached(priority: priority) {
                 do {
                     let result = try await execute(parameters)
-                    await MainActor.run {
+                    await MainActor.run { [promise] in
                         promise(.success(result))
                     }
                 } catch {
-                    await MainActor.run {
+                    await MainActor.run { [promise] in
                         promise(.failure(error as! F))
                     }
                 }

@@ -6,7 +6,7 @@
 import Foundation
 
 /// Asyncronized throwing use case implementation.
-public protocol AsyncThrowingUseCase: UseCaseable {
+public protocol AsyncThrowingUseCase: AsyncUsecaseable {
     associatedtype Failure = Error
 
     var execute: AsyncThrowingExecutable<Parameter, Result> { get }

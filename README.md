@@ -2,7 +2,7 @@
 
 [![Swift](https://github.com/xtro/SwiftUseCase/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/xtro/SwiftUseCase/actions/workflows/swift.yml) ![platforms](https://img.shields.io/badge/platform-iOS%20%7C%20watchOS%20%7C%20tvOS%20%7C%20macOS-333333) [![Swift Package Manager compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager) ![GitHub](https://img.shields.io/github/license/xtro/SwiftUseCase) ![Current version](https://img.shields.io/github/v/tag/xtro/SwiftUseCase)
 
-**SwiftUseCase** is library for creating independent & coverable usecases with a powerfull execution api.
+**SwiftUseCase** is library for creating independent & test coverable usecases with a powerfull execution api.
 
 ## Installation
 You can use Swift Package Manager to integrate the library by adding the following dependency in your Package.swift file or by adding directly within Xcode:
@@ -13,7 +13,8 @@ You can use Swift Package Manager to integrate the library by adding the followi
 
 ## Definitions
 
-A UseCase is a process where ``Parameter`` is transforming into ``Result`` by executing an ``Execution``. 
+A UseCase is a simple container that contains a ``Parameter`` and ``Result`` type and executing an ``Execution``.
+ 
 ```swift
 public protocol UseCaseable {
     associatedtype Parameter: Sendable

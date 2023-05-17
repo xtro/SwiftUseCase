@@ -6,7 +6,7 @@
 import Foundation
 
 /// Asyncronized use case implementation.
-public protocol AsyncUseCase: UseCaseable {
+public protocol AsyncUseCase: AsyncUsecaseable {
     var execute: AsyncExecutable<Parameter, Result> { get }
 }
 

@@ -5,9 +5,9 @@
 
 import Foundation
 
-public protocol UseCaseable {
-    associatedtype Parameter: Sendable
-    associatedtype Result: Sendable
-    associatedtype Execution: Sendable
+public protocol Usecaseable {
+    associatedtype Parameter
+    associatedtype Result
+    associatedtype Execution
     var execute: Execution { get }
 }
