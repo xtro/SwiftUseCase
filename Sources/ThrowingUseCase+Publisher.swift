@@ -16,3 +16,14 @@ public extension ThrowingUseCase {
         }.eraseToAnyPublisher()
     }
 }
+public extension ThrowingUseCase {
+    func publisher(parameters: Parameter, priority _: TaskPriority = .background) -> AnyPublisher<Result, Error> {
+        Future { promise in
+            do {
+                promise(.success(try execute(parameters)))
+            } catch {
+                promise(.failure(error))
+            }
+        }.eraseToAnyPublisher()
+    }
+}

@@ -23,3 +23,21 @@ public extension AsyncThrowingUseCase {
         }.eraseToAnyPublisher()
     }
 }
+public extension AsyncThrowingUseCase {
+    func publisher(parameters: Parameter, priority: TaskPriority = .background) -> AnyPublisher<Result, Error> {
+        Future { promise in
+            Task.detached(priority: priority) {
+                do {
+                    let result = try await execute(parameters)
+                    await MainActor.run { [promise] in
+                        promise(.success(result))
+                    }
+                } catch {
+                    await MainActor.run { [promise] in
+                        promise(.failure(error))
+                    }
+                }
+            }
+        }.eraseToAnyPublisher()
+    }
+}
