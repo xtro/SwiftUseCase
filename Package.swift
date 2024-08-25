@@ -1,6 +1,7 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "SwiftUseCase",
@@ -12,11 +13,30 @@ let package = Package(
     ],
     products: [
         .library(name: "SwiftUseCase", targets: ["SwiftUseCase"]),
+        .library(name: "SwiftUseCaseMacro", targets: ["SwiftUseCaseMacro"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-syntax.git", exact: "509.0.0")
     ],
     targets: [
+        .macro(
+            name: "Macros",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+            ],
+            path: "Sources/Macros"
+        ),
+        .target(
+            name: "SwiftUseCaseMacro",
+            dependencies: ["Macros"],
+            path: "Sources/Plugin"
+        ),
         .target(
             name: "SwiftUseCase",
-            path: "Sources"
+            dependencies: ["SwiftUseCaseMacro"],
+            path: "Sources/Usecases"
         ),
         .testTarget(name: "SwiftUseCaseTests", dependencies: ["SwiftUseCase"], path: "Tests"),
     ]
