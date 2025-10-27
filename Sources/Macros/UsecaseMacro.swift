@@ -2,8 +2,77 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
+/// A Swift macro that generates use case boilerplate code for functions.
+///
+/// This macro analyzes a function declaration and automatically generates
+/// a corresponding use case struct conforming to a specific protocol
+/// based on the function's signature. It creates a `Parameter` typealias or
+/// struct depending on the function's parameters, defines the `Result` typealias,
+/// and provides an `execute` property with the appropriate executable type.
+/// 
+/// Use this macro to reduce repetitive use case code and improve consistency.
+///
+/// ```swift
+/// @UsecaseMacro
+/// func fetchUser(id: Int) async throws -> User { ... }
+/// ```
+/// Generates:
+/// ```swift
+/// struct FetchUserUsecase: AsyncThrowingUseCase {
+///     public typealias Parameter = Int
+///     public typealias Result = User
+///
+///     public let execute: AsyncThrowingExecutable<Parameter, Result> = { _ in
+///          let id = $0.id
+///          ...
+///     }
+/// }
+/// ```
+///
+/// Example with multiple input parameters:
+/// ```swift
+/// @UsecaseMacro
+/// func updateProfile(id: Int, name: String, age: Int) async throws -> User { ... }
+/// ```
+/// Generates:
+/// ```swift
+/// struct UpdateProfileUsecase: AsyncThrowingUseCase {
+///     public struct Parameter {
+///         public let id: Int
+///         public let name: String
+///         public let age: Int
+///
+///         public init(id: Int, name: String, age: Int) {
+///             self.id = id
+///             self.name = name
+///             self.age = age
+///         }
+///     }
+///     public typealias Result = User
+///
+///     public let execute: AsyncThrowingExecutable<Parameter, Result> = {
+///         let id = $0.id
+///         let name = $0.name
+///         let age = $0.age
+///         // ...
+///     }
+/// }
+/// ```
 public struct UsecaseMacro {}
+
 extension UsecaseMacro: PeerMacro {
+    /// Expands the `@UsecaseMacro` attribute on a function by generating
+    /// a corresponding use case struct with properly typed `Parameter` and `Result`
+    /// typealiases or structs, plus an `execute` property that wraps the function's
+    /// body in an executable closure.
+    ///
+    /// - Parameters:
+    ///   - node: The attribute syntax node representing this macro invocation.
+    ///   - declaration: The function declaration to which the macro is applied.
+    ///   - context: The macro expansion context.
+    ///
+    /// - Returns: An array of declarations representing the generated use case struct
+    ///   and a static instance of it.
     public static func expansion(of node: AttributeSyntax,
                                  providingPeersOf declaration: some DeclSyntaxProtocol,
                                  in context: some MacroExpansionContext) throws -> [DeclSyntax] {
@@ -16,28 +85,21 @@ extension UsecaseMacro: PeerMacro {
                 modifier: $0.attributes.isEmpty ? nil : $0.attributes.trimmedDescription
             )
         }
-        let parameterText: String
         let hasParameter = !parameters.isEmpty
-        let hasManyParameters = parameters.count > 1
-        if !hasParameter {
-            parameterText = """
-            public typealias Parameter = Void
-            """
-        } else if !hasManyParameters {
-            parameterText = """
-            public typealias Parameter = \(parameters.first!.type)
-            """
-        } else {
-            parameterText = """
-            public struct Parameter {
-                \(parameters.render(mode: .parameter(.list)))
-            
-                public init(\(parameters.render(mode: .parameter(.parameter), separator: .coma))) {
-                    \(parameters.render(mode: .equal(left: "self")))
-                }
+        func makeParameterTypeDefinition(from parameters: [Variable]) -> String {
+            if parameters.isEmpty {
+                return """
+                public typealias Parameter = Void
+                """
+            } else if parameters.count == 1 {
+                return """
+                public typealias Parameter = \(parameters.first!.type)
+                """
+            } else {
+                return makeParameterStruct(from: parameters)
             }
-            """
         }
+        
         let isAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let isThrows = function.signature.effectSpecifiers?.throwsSpecifier != nil
         let returnType = function.signature.returnClause?.type.trimmedDescription ?? "Void"
@@ -49,7 +111,7 @@ extension UsecaseMacro: PeerMacro {
         
         return ["""
         public struct \(raw: usecaseName): \(raw: usecaseType) {
-            \(raw: parameterText)
+            \(raw: makeParameterTypeDefinition(from: parameters))
             public typealias Result = \(raw: returnType)
         
             public let execute: \(raw: executableName)<Parameter, Result> = { \(raw: hasParameter ? "" : "_ in")
@@ -60,6 +122,20 @@ extension UsecaseMacro: PeerMacro {
         }
         public static let \(raw: originalName) = \(raw: name)Usecase()
         """]
+    }
+    
+    // MARK: - Helper for Parameter Struct
+    
+    private static func makeParameterStruct(from parameters: [Variable]) -> String {
+        """
+        public struct Parameter {
+            \(parameters.render(mode: .parameter(.list)))
+        
+            public init(\(parameters.render(mode: .parameter(.parameter), separator: .coma))) {
+                \(parameters.render(mode: .equal(left: "self")))
+            }
+        }
+        """
     }
 }
 
@@ -141,3 +217,4 @@ fileprivate extension Optional {
         }
     }
 }
+

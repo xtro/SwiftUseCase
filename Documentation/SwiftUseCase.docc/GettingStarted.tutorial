@@ -1,0 +1,108 @@
+@Tutorials(name: "Getting Started with SwiftUseCase") {
+  @Intro(title: "Encapsulate your app’s logic with Use Cases") {
+    Model business logic as small, focused “use cases” that are easy to test and reuse. In this tutorial, you’ll create synchronous and asynchronous use cases, bridge them to callbacks and Combine, and learn how to use type erasure for flexible composition.
+  }
+
+  @Chapter(name: "Introducing Use Cases") {
+    @Section(title: "Why Use Cases?") {
+      Use cases help you keep UI light and business logic centralized. They define explicit inputs and outputs, making code testable and predictable.
+    }
+  }
+
+  @Chapter(name: "Modeling Use Cases") {
+    @Section(title: "Synchronous and Throwing") {
+      @Code(name: "Create a synchronous UseCase") {
+        struct Increment: UseCase {
+          typealias Parameter = Int
+          typealias Result = Int
+          var execute: Executable<Int, Int> { { $0 + 1 } }
+        }
+
+        let result = Increment()(41) // 42
+      }
+
+      @Code(name: "Create a throwing UseCase") {
+        enum ValidationError: Error { case empty }
+
+        struct Validate: ThrowingUseCase {
+          typealias Parameter = String
+          typealias Result = Void
+          func callAsFunction(_ text: String) throws { if text.isEmpty { throw ValidationError.empty } }
+          var execute: ThrowingExecutable<String, Void> { { try self($0) } }
+        }
+
+        try? Validate()("hello")
+      }
+    }
+
+    @Section(title: "Async and Async Throwing") {
+      @Code(name: "Create an AsyncUseCase") {
+        struct LoadProfile: AsyncUseCase {
+          typealias Parameter = UUID
+          typealias Result = Profile
+          var execute: AsyncExecutable<UUID, Profile> { { id in await api.load(id) } }
+        }
+
+        let profile = await LoadProfile()(UUID())
+      }
+
+      @Code(name: "Create an AsyncThrowingUseCase") {
+        struct Download: AsyncThrowingUseCase {
+          typealias Parameter = URL
+          typealias Result = Data
+          var execute: AsyncThrowingExecutable<URL, Data> { { url in try await client.download(url) } }
+        }
+
+        let data = try await Download()(URL(string: "https://example.com/file")!)
+      }
+    }
+  }
+
+  @Chapter(name: "Integrating with UI") {
+    @Section(title: "Callbacks and Cancellation") {
+      @Code(name: "Use callbacks for async cases") {
+        let cancellable = Download().execute(URL(string: "https://example.com")!,
+          onFailure: { print($0) },
+          onComplete: { data in print(data.count) }
+        )
+        // Later:
+        cancellable.cancel()
+      }
+    }
+
+    @Section(title: "Combine Publishers") {
+      @Code(name: "Publish results") {
+        let pub: AnyPublisher<Profile, Never> = LoadProfile().publisher(parameters: UUID())
+        let c = pub.sink(receiveValue: { print($0) })
+      }
+
+      @Code(name: "Custom error type") {
+        enum NetworkError: Error { case offline }
+        let pub: AnyPublisher<Data, NetworkError> = Download()
+          .publisher(parameters: URL(string: "https://example.com")!, failureType: NetworkError.self)
+      }
+    }
+  }
+
+  @Chapter(name: "Type Erasure and Composition") {
+    @Section(title: "AnyUseCase in Practice") {
+      @Code(name: "Erase and pass across layers") {
+        struct Add: UseCase {
+          typealias Parameter = Int
+          typealias Result = Int
+          var execute: Executable<Int, Int> { { $0 + 1 } }
+        }
+
+        let any = Add().eraseToAnyUseCase
+        // Pass `any` to a UI component or store without generics leaking.
+        any.onComplete = { print($0) }
+        any.execute(41)
+      }
+
+      @Code(name: "Bridge Combine to a Use Case") {
+        let uc = CombineUseCase<AnyPublisher<User, Error>>()
+        let user = try await uc( api.getUser(id: id).eraseToAnyPublisher() )
+      }
+    }
+  }
+}
