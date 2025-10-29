@@ -16,7 +16,7 @@ let package = Package(
         .library(name: "SwiftUseCaseMacro", targets: ["SwiftUseCaseMacro"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", exact: "509.0.0")
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "510.0.0")
     ],
     targets: [
         .macro(
