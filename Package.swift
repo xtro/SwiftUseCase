@@ -20,7 +20,7 @@ let package = Package(
     ],
     targets: [
         .macro(
-            name: "Macros",
+            name: "SwiftUseCaseMacros",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
@@ -30,7 +30,7 @@ let package = Package(
         ),
         .target(
             name: "SwiftUseCaseMacro",
-            dependencies: ["Macros"],
+            dependencies: ["SwiftUseCaseMacros"],
             path: "Sources/Plugin"
         ),
         .target(
